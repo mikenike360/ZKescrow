@@ -1,99 +1,135 @@
 import credits.aleo;
 
-program zkescrow.aleo {
+program zkescrow_combinedv2.aleo {
+    const HOLDER: address =
+        aleo1xh0ncflwkfzga983lwujsha729c8nwu7phfn8aw7h3gahhj0ms8qytrxec;
 
-    // Token record for escrow transfers (owner is required)
-    record Token {
+    record WALEO {
         owner: address,
         amount: u64,
     }
 
-    // Escrow state structure (renamed 'owner' to 'sender')
     struct Escrow {
         sender: address,
         recipient: address,
         amount: u64,
     }
 
-    // Escrow storage
     mapping escrows: u64 => Escrow;
 
-    const MINT_AUTHORITY: address = aleo1xh0ncflwkfzga983lwujsha729c8nwu7phfn8aw7h3gahhj0ms8qytrxec;
+    async transition wrap_public_credits(
+        public to: address,
+        public amount: u64
+    ) -> (WALEO, Future) {
+        assert(amount > 0u64);
+        let token: WALEO = WALEO { owner: to, amount };
 
-    transition mint_token(public recipient: address, public amount: u64) -> Token {
-        assert_eq(self.caller, MINT_AUTHORITY);
+        //let future: Future = credits.aleo/transfer_public(HOLDER, amount);
 
-        return Token {
-            owner: recipient,
-            amount,
-        };
+        let future: Future = credits.aleo/transfer_public_as_signer(HOLDER, amount);
+
+        return (token, finalize_wrap_public_credits(future));
     }
 
-
-    transition wrap(public amount: u64, payment: credits.aleo/credits) -> Token {
-        assert_eq(payment.owner, self.caller);
-        assert_eq(payment.microcredits, amount);
-
-        return Token {
-            owner: self.caller,
-            amount,
-        };
+    async function finalize_wrap_public_credits(
+        public future: Future
+    ) {
+        future.await();
     }
 
-
-    // STEP 1: Fund the escrow
-    async transition fund(public id: u64, private recipient: address, private token: Token, public memo: field) -> (u8, Future) {
+    async transition unwrap_public_credits(
+        private token: WALEO,
+        public recipient: address
+    ) -> (u64, Future) {
         assert_eq(token.owner, self.caller);
-
-        return (0u8, finalize_fund(id, recipient, token.amount, self.caller));
+        let amt: u64 = token.amount;
+        let future: Future = credits.aleo/transfer_public(recipient, amt);
+        return (amt, finalize_unwrap_public_credits(future));
     }
 
-    async function finalize_fund(id: u64, recipient: address, amount: u64, sender: address) {
-        assert(!escrows.contains(id));
-
-        let entry: Escrow = Escrow {
-            sender,
-            recipient,
-            amount,
-        };
-
-        escrows.set(id, entry);
+    async function finalize_unwrap_public_credits(
+        public future: Future
+    ) {
+        future.await();
     }
 
-    // STEP 2: RELEASE    async transition release(public id: u64) -> (Token, Future) {
-        let dummy: Token = Token {
-            owner: self.call       return (dummy, finalize_release(id, self.caller));
-    }
-
-    async function finalize_release(id: u64, caller: address) {
-        let entry: Escrow = escrows.get(id);
-        assert_eq(caller, entry.sender);
-
-        escrows.remove(id);
-    }
-
-    // STEP 3: CLAIM
-    async transition claim(public id: u64) -> (Token, Future) {
-        let dummy: Token = Token {
-            owner: self.caller,
-            amount: 0u64,
-        };
-
-        return (dummy, finalize_claim(id, self.caller));
-    }
-
-    async function finalize_claim(id: u64, caller: address) {
-        let entry: Escrow = escrows.get(id);
-        assert_eq(caller, entry.recipient);
-
-        escrows.remove(id);
-    }
-
-    transition unwrap(private token: Token, public memo: field) -> u64 {
+    async transition deposit(
+        public id: u64,
+        private recipient: address,
+        private token: WALEO
+    ) -> (u8, Future) {
         assert_eq(token.owner, self.caller);
         assert(token.amount > 0u64);
-
-        return token.amount;
+        return (0u8, finalize_deposit(id, recipient, token.amount, self.caller));
     }
 
+    async function finalize_deposit(
+        public id: u64,
+        public recipient: address,
+        public amount: u64,
+        public sender: address
+    ) {
+        assert(!escrows.contains(id));
+        escrows.set(id, Escrow { sender, recipient, amount });
+    }
+
+    async transition release(
+        public id: u64,
+        public amount: u64,
+        public recipient: address
+    ) -> (WALEO, Future) {
+        let out: WALEO = WALEO { owner: recipient, amount };
+        return (out, finalize_release(id, amount, recipient, self.caller));
+    }
+
+    async function finalize_release(
+        public id: u64,
+        public amount: u64,
+        public recipient: address,
+        public caller: address
+    ) {
+        let e: Escrow = escrows.get(id);
+        assert_eq(caller, e.sender);
+        assert_eq(recipient, e.recipient);
+        assert_eq(amount, e.amount);
+        escrows.remove(id);
+    }
+
+    async transition claim(
+        public id: u64,
+        public amount: u64
+    ) -> (WALEO, Future) {
+        let out: WALEO = WALEO { owner: self.caller, amount };
+        return (out, finalize_claim(id, amount, self.caller));
+    }
+
+    async function finalize_claim(
+        public id: u64,
+        public amount: u64,
+        public caller: address
+    ) {
+        let e: Escrow = escrows.get(id);
+        assert_eq(caller, e.recipient);
+        assert_eq(amount, e.amount);
+        escrows.remove(id);
+    }
+
+    async transition cancel(
+        public id: u64,
+        public amount: u64
+    ) -> (WALEO, Future) {
+        let out: WALEO = WALEO { owner: self.caller, amount };
+        return (out, finalize_cancel(id, amount, self.caller));
+    }
+
+    async function finalize_cancel(
+        public id: u64,
+        public amount: u64,
+        public caller: address
+    ) {
+        let e: Escrow = escrows.get(id);
+        assert_eq(caller, e.sender);
+        assert_eq(amount, e.amount);
+        escrows.remove(id);
+    }
 }

@@ -36,4 +36,4 @@ export type BountyData = {
   proposals?: ProposalData[];
 };
 
-export const BOUNTY_PROGRAM_ID = 'zkontract.aleo';
+export const PROGRAM_ID = 'zkescrow_testing.aleo';
