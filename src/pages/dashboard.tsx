@@ -3,99 +3,154 @@ import { NextSeo } from 'next-seo';
 import Layout from '@/layouts/_layout';
 import Button from '@/components/ui/button';
 import { useWallet } from '@demox-labs/aleo-wallet-adapter-react';
-import { WalletNotConnectedError } from '@demox-labs/aleo-wallet-adapter-base';
-import { Transaction, WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
+import {
+  WalletNotConnectedError,
+  Transaction,
+  WalletAdapterNetwork,
+} from '@demox-labs/aleo-wallet-adapter-base';
 import { useState } from 'react';
-import { getFeeForFunction } from '@/utils/feeCalculator';
 
+// ──────────────────────────────────────────
 const PROGRAM_ID = 'zkescrow_combinedv2.aleo';
-const WRAP_FUNCTION = 'wrap_public_credits';
 const NETWORK = WalletAdapterNetwork.TestnetBeta;
 
-const Dashboard: NextPageWithLayout = () => {
-  const { publicKey, connected, requestTransaction, transactionStatus } = useWallet();
+const WRAP_FN = 'wrap_public_credits';
+const UNWRAP_FN = 'unwrap_public_credits';
+const DEPOSIT_FN = 'deposit';
+const RELEASE_FN = 'release';
+
+const FEE = 1_000_000;
+// ──────────────────────────────────────────
+
+const DashboardDemo: NextPageWithLayout = () => {
+  const {
+    publicKey,
+    connected,
+    requestTransaction,
+    transactionStatus,
+    requestRecords,
+  } = useWallet();
+
+  const [logs, setLogs] = useState<string[]>([]);
+  const log = (l: string) => setLogs((p) => [...p, l]);
+
   const [amount, setAmount] = useState('100u64');
-  const [result, setResult] = useState<string | null>(null);
+  const [escrowId, setEscrowId] = useState('1u64');
+  const [recipient, setRecipient] = useState('');
+  const [unwrapRecipient, setUnwrapRecipient] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleWrap = async () => {
-    setResult(null);
+  // helper
+  const submitAndPoll = async (tx: Transaction, fn: string) => {
+    const id = await requestTransaction(tx);
+    log(`[INFO] ${fn} submitted -> ${id}`);
+    for (let i = 0; i < 60; i++) {
+      const st = await transactionStatus(id);
+      if (st === 'Finalized') { log(`[DONE] ${fn} finalized`); break; }
+      if (st === 'Rejected' || st === 'Failed') { log(`[ERR] ${fn} ${st}`); break; }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  };
+
+  // 1. Wrap
+  const wrap = async () => {
+    if (!connected || !publicKey) throw new WalletNotConnectedError();
     setLoading(true);
     try {
-      if (!connected || !publicKey) throw new WalletNotConnectedError();
+      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, WRAP_FN, [publicKey, amount], FEE, false);
+      await submitAndPoll(tx, WRAP_FN);
+    } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
+  };
 
-      // Build inputs: [to_address, amount]
-      const inputs = [publicKey, amount];
+  // 2. Unwrap (auto‑fetch WALEO record)
+  const unwrap = async () => {
+    if (!connected || !publicKey) throw new WalletNotConnectedError();
+    setLoading(true);
+    try {
+      const all = await requestRecords(PROGRAM_ID);
+      const tokens = all.filter((r: any) => !r.spent && r.data?.amount) as Record[];
+      if (!tokens.length) { log('[ERR] unwrap: no WALEO records'); setLoading(false); return; }
+      const token = tokens[0];
+      const rcpt = unwrapRecipient || publicKey;
+      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, UNWRAP_FN, [token, rcpt], FEE, true);
+      await submitAndPoll(tx, UNWRAP_FN);
+    } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
+  };
 
-      // Compute fee dynamically
-      const fee = 1000000;
+  // 3. Deposit (auto‑fetch WALEO record)
+  const deposit = async () => {
+    if (!connected || !publicKey) throw new WalletNotConnectedError();
+    setLoading(true);
+    try {
+      const all = await requestRecords(PROGRAM_ID);
+      const tokens = all.filter((r: any) => !r.spent && r.data?.amount) as Record[];
+      if (!tokens.length) { log('[ERR] deposit: no WALEO records'); setLoading(false); return; }
+      const token = tokens[0];
+      const rcpt = recipient || publicKey;
+      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, DEPOSIT_FN, [escrowId, rcpt, token], FEE, true);
+      await submitAndPoll(tx, DEPOSIT_FN);
+    } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
+  };
 
-      // Create & submit tx
-      const tx = Transaction.createTransaction(
-        publicKey,
-        NETWORK,
-        PROGRAM_ID,
-        WRAP_FUNCTION,
-        inputs,
-        fee,
-        false
-      );
-      const txId = await requestTransaction(tx);
-      setResult(`Submitted! TX ID: ${txId}`);
-
-      // Poll for finalization
-      for (let i = 0; i < 60; i++) {
-        const status = await transactionStatus(txId);
-        if (status === 'Finalized') {
-          setResult((prev) => prev + '\nFinalized.');
-          break;
-        }
-        await new Promise((r) => setTimeout(r, 2000));
-      }
-    } catch (e) {
-      setResult(`Error: ${e instanceof Error ? e.message : e}`);
-    } finally {
-      setLoading(false);
-    }
+  // 4. Release
+  const release = async () => {
+    if (!connected || !publicKey) throw new WalletNotConnectedError();
+    setLoading(true);
+    try {
+      const rcpt = recipient || publicKey;
+      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, RELEASE_FN, [escrowId, amount, rcpt], FEE, true);
+      await submitAndPoll(tx, RELEASE_FN);
+    } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
   };
 
   return (
     <>
-      <NextSeo title="zkEscrow Dashboard" />
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-4">zkEscrow Dashboard</h1>
-
+      <NextSeo title="zkEscrow Demo" />
+      <div className="p-6 space-y-8 max-w-2xl mx-auto">
+        <h1 className="text-3xl font-semibold">zkEscrow Demo</h1>
         {connected ? (
-          <p className="mb-4 text-gray-600">
-            Connected: <span className="font-mono">{publicKey}</span>
-          </p>
+          <p className="text-sm text-gray-600 break-all">Connected as <span className="font-mono">{publicKey}</span></p>
         ) : (
-          <p className="mb-4 text-red-500">Wallet not connected.</p>
+          <p className="text-red-500">Wallet not connected.</p>
         )}
 
-        <div className="mb-6">
-          <label className="block mb-1 font-medium">Amount to Wrap:</label>
-          <input
-            type="text"
-            className="w-64 rounded border px-3 py-2"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
+        {/* Wrap */}
+        <div className="border rounded p-4 space-y-4">
+          <h2 className="text-xl font-medium">1. Wrap Credits</h2>
+          <input className="border rounded px-3 py-2 w-full" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <Button onClick={wrap} disabled={!connected || loading}>Wrap</Button>
         </div>
 
-        <Button onClick={handleWrap} disabled={!connected || loading}>
-          {loading ? 'Wrapping…' : 'Wrap Public Credits'}
-        </Button>
+        {/* Unwrap */}
+        <div className="border rounded p-4 space-y-4">
+          <h2 className="text-xl font-medium">2. Unwrap Credits</h2>
+          <input className="border rounded px-3 py-2 w-full" placeholder="Recipient address (optional)" value={unwrapRecipient} onChange={(e) => setUnwrapRecipient(e.target.value)} />
+          <Button onClick={unwrap} disabled={!connected || loading}>Unwrap</Button>
+        </div>
 
-        {result && (
-          <div className="mt-6 rounded border bg-gray-100 p-4 text-sm whitespace-pre-wrap">
-            {result}
-          </div>
-        )}
+        {/* Deposit */}
+        <div className="border rounded p-4 space-y-4">
+          <h2 className="text-xl font-medium">3. Deposit to Escrow</h2>
+          <input className="border rounded px-3 py-2 w-full" placeholder="Escrow ID" value={escrowId} onChange={(e) => setEscrowId(e.target.value)} />
+          <input className="border rounded px-3 py-2 w-full" placeholder="Recipient address" value={recipient} onChange={(e) => setRecipient(e.target.value)} />
+          <Button onClick={deposit} disabled={!connected || loading}>Deposit</Button>
+        </div>
+
+        {/* Release */}
+        <div className="border rounded p-4 space-y-4">
+          <h2 className="text-xl font-medium">4. Release Escrow</h2>
+          <input className="border rounded px-3 py-2 w-full" placeholder="Escrow ID" value={escrowId} onChange={(e) => setEscrowId(e.target.value)} />
+          <Button onClick={release} disabled={!connected || loading}>Release</Button>
+        </div>
+
+        {/* Console */}
+        <div className="border rounded p-4 bg-gray-50 text-xs whitespace-pre-wrap max-h-60 overflow-y-auto">
+          {logs.length ? logs.map((l, i) => <div key={i}>{l}</div>) : 'No output yet.'}
+        </div>
       </div>
     </>
   );
 };
 
-Dashboard.getLayout = (page) => <Layout>{page}</Layout>;
-export default Dashboard;
+DashboardDemo.getLayout = (page) => <Layout>{page}</Layout>;
+export default DashboardDemo;
