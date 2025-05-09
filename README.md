@@ -1,12 +1,19 @@
 # zkEscrow Demo 🛡️
 
-A minimal React + Tailwind front‑end that drives the \`\` smart contract on Aleo Testnet Beta.
+**Try it live:** [https://zkescrow.vercel.app](https://zkescrow.vercel.app)
 
-```
-wrap → deposit → release → unwrap
-```
+---
 
-> **Goal:** show judges (or teammates) a complete escrow flow in four clicks, with zero manual copy‑pasting of private records.
+## What does this app do?
+
+This single‑page demo lets **any two wallets** try an escrow trade without touching the CLI:
+
+1. **Wrap Credits** – The caller pays `amount` public credits; the contract mints a private `WALEO` record for them.
+2. **Deposit** – The UI automatically picks that record and locks it to an `escrowId` + recipient.
+3. **Release** – The sender releases the escrow, creating a new WALEO record for the recipient.
+4. **Unwrap Credits** – The recipient’s wallet auto‑finds that record and converts it back to public credits.
+
+No manual copy‑pasting of ciphertext, no need to pre‑fund the contract – just four clicks.
 
 ---
 
@@ -17,8 +24,7 @@ wrap → deposit → release → unwrap
 3. [Quick Start](#quick-start)
 4. [Directory Guide](#directory-guide)
 5. [Troubleshooting](#troubleshooting)
-6. [Roadmap / Ideas](#roadmap--ideas)
-7. [License](#license)
+6. [License](#license)
 
 ---
 
@@ -47,18 +53,18 @@ wrap → deposit → release → unwrap
 
 ```bash
 # 1 – clone
-$ git clone https://github.com/mikenike360/ZKescrow.git
-$ cd ZKescrow
+$ git clone https://github.com/<your‑org>/zkescrow-demo.git
+$ cd zkescrow-demo
 
 # 2 – install deps
-$ yarn install   
+$ pnpm install   # or npm / yarn
 
 # 3 – env (optional)
 # If you forked the contract with a new ID, set it here
 $ echo "NEXT_PUBLIC_PROGRAM_ID=zkescrow_combinedv2.aleo" > .env.local
 
 # 4 – run
-$ yarn dev
+$ pnpm dev
 ```
 
 Then open `http://localhost:3000`, connect Leo Wallet Testnet Beta, and click through the four cards.
@@ -92,14 +98,8 @@ Then open `http://localhost:3000`, connect Leo Wallet Testnet Beta, and click 
 
 ---
 
-## Roadmap / Ideas
-
-* Add **Claim** / **Cancel** flows to UI (buyer‐protection paths).
-* Persist logs to IndexedDB so refresh doesn’t clear history.
-* CI pipeline: ESLint + Prettier + Leo unit tests.
-
----
-
 ## License
 
-MIT © 2025 Michael Venema / VenomLabs
+MIT © 2025 Your Name / Org
+
+---
