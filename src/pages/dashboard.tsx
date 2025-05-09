@@ -121,16 +121,9 @@ const DashboardDemo: NextPageWithLayout = () => {
           <Button onClick={wrap} disabled={!connected || loading}>Wrap</Button>
         </div>
 
-        {/* Unwrap */}
-        <div className="border rounded p-4 space-y-4">
-          <h2 className="text-xl font-medium">2. Unwrap Credits</h2>
-          <input className="border rounded px-3 py-2 w-full" placeholder="Recipient address (optional)" value={unwrapRecipient} onChange={(e) => setUnwrapRecipient(e.target.value)} />
-          <Button onClick={unwrap} disabled={!connected || loading}>Unwrap</Button>
-        </div>
-
         {/* Deposit */}
         <div className="border rounded p-4 space-y-4">
-          <h2 className="text-xl font-medium">3. Deposit to Escrow</h2>
+          <h2 className="text-xl font-medium">2. Deposit to Escrow</h2>
           <input className="border rounded px-3 py-2 w-full" placeholder="Escrow ID" value={escrowId} onChange={(e) => setEscrowId(e.target.value)} />
           <input className="border rounded px-3 py-2 w-full" placeholder="Recipient address" value={recipient} onChange={(e) => setRecipient(e.target.value)} />
           <Button onClick={deposit} disabled={!connected || loading}>Deposit</Button>
@@ -138,9 +131,16 @@ const DashboardDemo: NextPageWithLayout = () => {
 
         {/* Release */}
         <div className="border rounded p-4 space-y-4">
-          <h2 className="text-xl font-medium">4. Release Escrow</h2>
+          <h2 className="text-xl font-medium">3. Release Escrow</h2>
           <input className="border rounded px-3 py-2 w-full" placeholder="Escrow ID" value={escrowId} onChange={(e) => setEscrowId(e.target.value)} />
           <Button onClick={release} disabled={!connected || loading}>Release</Button>
+        </div>
+
+        {/* Unwrap */}
+        <div className="border rounded p-4 space-y-4">
+          <h2 className="text-xl font-medium">4. Unwrap Credits</h2>
+          <input className="border rounded px-3 py-2 w-full" placeholder="Recipient address (optional)" value={unwrapRecipient} onChange={(e) => setUnwrapRecipient(e.target.value)} />
+          <Button onClick={unwrap} disabled={!connected || loading}>Unwrap</Button>
         </div>
 
         {/* Console */}
