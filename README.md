@@ -47,18 +47,18 @@ wrap → deposit → release → unwrap
 
 ```bash
 # 1 – clone
-$ git clone https://github.com/<your‑org>/zkescrow-demo.git
-$ cd zkescrow-demo
+$ git clone https://github.com/mikenike360/ZKescrow.git
+$ cd ZKescrow
 
 # 2 – install deps
-$ pnpm install   # or npm / yarn
+$ yarn install   
 
 # 3 – env (optional)
 # If you forked the contract with a new ID, set it here
 $ echo "NEXT_PUBLIC_PROGRAM_ID=zkescrow_combinedv2.aleo" > .env.local
 
 # 4 – run
-$ pnpm dev
+$ yarn dev
 ```
 
 Then open `http://localhost:3000`, connect Leo Wallet Testnet Beta, and click through the four cards.
@@ -102,4 +102,4 @@ Then open `http://localhost:3000`, connect Leo Wallet Testnet Beta, and click 
 
 ## License
 
-MIT © 2025 Your Name / Org
+MIT © 2025 Michael Venema / VenomLabs
