@@ -39,6 +39,8 @@ const DashboardDemo: NextPageWithLayout = () => {
   const [recipient, setRecipient] = useState('');
   const [unwrapRecipient, setUnwrapRecipient] = useState('');
   const [loading, setLoading] = useState(false);
+  const ReleaseAmount = '5000000u64';
+
 
   // helper
   const submitAndPoll = async (tx: Transaction, fn: string) => {
@@ -98,7 +100,7 @@ const DashboardDemo: NextPageWithLayout = () => {
     setLoading(true);
     try {
       const rcpt = recipient || publicKey;
-      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, RELEASE_FN, [escrowId, amount, rcpt], FEE, false);
+      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, RELEASE_FN, [escrowId, ReleaseAmount, rcpt], FEE, false);
       await submitAndPoll(tx, RELEASE_FN);
     } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
   };
