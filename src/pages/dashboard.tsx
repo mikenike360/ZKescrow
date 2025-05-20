@@ -38,7 +38,8 @@ const DashboardDemo: NextPageWithLayout = () => {
   const [escrowId, setEscrowId] = useState('1u64');
   const [recipient, setRecipient] = useState('');
   const [unwrapRecipient, setUnwrapRecipient] = useState('');
-  const [releaseAmount, setReleaseAmount] = useState('5000000u64');
+  const [releaseAmount, setReleaseAmount] = useState('');
+  const [releaseRecipient, setReleaseRecipient] = useState('');
   const [loading, setLoading] = useState(false);
 
   // helper
@@ -81,7 +82,7 @@ const DashboardDemo: NextPageWithLayout = () => {
     }
   };
 
-  // 2. Unwrap (auto‑fetch WALEO record)
+  // 2. Unwrap (auto-fetch WALEO record)
   const unwrap = async () => {
     if (!connected || !publicKey) throw new WalletNotConnectedError();
     setLoading(true);
@@ -112,7 +113,7 @@ const DashboardDemo: NextPageWithLayout = () => {
     }
   };
 
-  // 3. Deposit (auto‑fetch WALEO record)
+  // 3. Deposit (auto-fetch WALEO record)
   const deposit = async () => {
     if (!connected || !publicKey) throw new WalletNotConnectedError();
     setLoading(true);
@@ -143,18 +144,36 @@ const DashboardDemo: NextPageWithLayout = () => {
     }
   };
 
-  // 4. Release
+  // 4. Release (allow custom amount or fallback to escrow record)
   const release = async () => {
     if (!connected || !publicKey) throw new WalletNotConnectedError();
     setLoading(true);
     try {
-      const rcpt = recipient || publicKey;
+      const rcpt = releaseRecipient || publicKey;
+      let args: any[];
+
+      if (releaseAmount) {
+        // user-specified amount
+        args = [escrowId, releaseAmount, rcpt];
+      } else {
+        // fetch the escrow record to get its amount
+        const all = await requestRecords(PROGRAM_ID);
+        const tokens = all.filter((r: any) => !r.spent && r.data?.escrow_id === escrowId) as Record[];
+        if (!tokens.length) {
+          log('[ERR] release: no matching escrow record');
+          setLoading(false);
+          return;
+        }
+        const token = tokens[0];
+        args = [escrowId, token, rcpt];
+      }
+
       const tx = Transaction.createTransaction(
         publicKey,
         NETWORK,
         PROGRAM_ID,
         RELEASE_FN,
-        [escrowId, releaseAmount, rcpt],
+        args,
         FEE,
         false
       );
@@ -203,9 +222,15 @@ const DashboardDemo: NextPageWithLayout = () => {
           />
           <input
             className="border rounded px-3 py-2 w-full"
-            placeholder="Amount (e.g. 5000000u64)"
+            placeholder="Amount (e.g. 5000000u64) - leave blank to use escrow balance"
             value={releaseAmount}
             onChange={(e) => setReleaseAmount(e.target.value)}
+          />
+          <input
+            className="border rounded px-3 py-2 w-full"
+            placeholder="Recipient address for release"
+            value={releaseRecipient}
+            onChange={(e) => setReleaseRecipient(e.target.value)}
           />
           <Button onClick={release} disabled={!connected || loading}>Release</Button>
         </div>
