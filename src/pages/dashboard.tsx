@@ -72,7 +72,7 @@ const DashboardDemo: NextPageWithLayout = () => {
       if (!tokens.length) { log('[ERR] unwrap: no WALEO records'); setLoading(false); return; }
       const token = tokens[0];
       const rcpt = unwrapRecipient || publicKey;
-      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, UNWRAP_FN, [token, rcpt], FEE, true);
+      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, UNWRAP_FN, [token, rcpt], FEE, false);
       await submitAndPoll(tx, UNWRAP_FN);
     } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
   };
@@ -87,7 +87,7 @@ const DashboardDemo: NextPageWithLayout = () => {
       if (!tokens.length) { log('[ERR] deposit: no WALEO records'); setLoading(false); return; }
       const token = tokens[0];
       const rcpt = recipient || publicKey;
-      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, DEPOSIT_FN, [escrowId, rcpt, token], FEE, true);
+      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, DEPOSIT_FN, [escrowId, rcpt, token], FEE, false);
       await submitAndPoll(tx, DEPOSIT_FN);
     } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
   };
@@ -98,7 +98,7 @@ const DashboardDemo: NextPageWithLayout = () => {
     setLoading(true);
     try {
       const rcpt = recipient || publicKey;
-      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, RELEASE_FN, [escrowId, amount, rcpt], FEE, true);
+      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, RELEASE_FN, [escrowId, amount, rcpt], FEE, false);
       await submitAndPoll(tx, RELEASE_FN);
     } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
   };
