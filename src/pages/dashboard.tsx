@@ -38,9 +38,8 @@ const DashboardDemo: NextPageWithLayout = () => {
   const [escrowId, setEscrowId] = useState('1u64');
   const [recipient, setRecipient] = useState('');
   const [unwrapRecipient, setUnwrapRecipient] = useState('');
+  const [releaseAmount, setReleaseAmount] = useState('5000000u64');
   const [loading, setLoading] = useState(false);
-  const ReleaseAmount = '5000000u64';
-
 
   // helper
   const submitAndPoll = async (tx: Transaction, fn: string) => {
@@ -48,8 +47,14 @@ const DashboardDemo: NextPageWithLayout = () => {
     log(`[INFO] ${fn} submitted -> ${id}`);
     for (let i = 0; i < 60; i++) {
       const st = await transactionStatus(id);
-      if (st === 'Finalized') { log(`[DONE] ${fn} finalized`); break; }
-      if (st === 'Rejected' || st === 'Failed') { log(`[ERR] ${fn} ${st}`); break; }
+      if (st === 'Finalized') {
+        log(`[DONE] ${fn} finalized`);
+        break;
+      }
+      if (st === 'Rejected' || st === 'Failed') {
+        log(`[ERR] ${fn} ${st}`);
+        break;
+      }
       await new Promise((r) => setTimeout(r, 2000));
     }
   };
@@ -59,9 +64,21 @@ const DashboardDemo: NextPageWithLayout = () => {
     if (!connected || !publicKey) throw new WalletNotConnectedError();
     setLoading(true);
     try {
-      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, WRAP_FN, [publicKey, amount], FEE, false);
+      const tx = Transaction.createTransaction(
+        publicKey,
+        NETWORK,
+        PROGRAM_ID,
+        WRAP_FN,
+        [publicKey, amount],
+        FEE,
+        false
+      );
       await submitAndPoll(tx, WRAP_FN);
-    } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
+    } catch (e) {
+      log(`Error: ${e}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 2. Unwrap (auto‑fetch WALEO record)
@@ -71,12 +88,28 @@ const DashboardDemo: NextPageWithLayout = () => {
     try {
       const all = await requestRecords(PROGRAM_ID);
       const tokens = all.filter((r: any) => !r.spent && r.data?.amount) as Record[];
-      if (!tokens.length) { log('[ERR] unwrap: no WALEO records'); setLoading(false); return; }
+      if (!tokens.length) {
+        log('[ERR] unwrap: no WALEO records');
+        setLoading(false);
+        return;
+      }
       const token = tokens[0];
       const rcpt = unwrapRecipient || publicKey;
-      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, UNWRAP_FN, [token, rcpt], FEE, false);
+      const tx = Transaction.createTransaction(
+        publicKey,
+        NETWORK,
+        PROGRAM_ID,
+        UNWRAP_FN,
+        [token, rcpt],
+        FEE,
+        false
+      );
       await submitAndPoll(tx, UNWRAP_FN);
-    } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
+    } catch (e) {
+      log(`Error: ${e}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 3. Deposit (auto‑fetch WALEO record)
@@ -86,12 +119,28 @@ const DashboardDemo: NextPageWithLayout = () => {
     try {
       const all = await requestRecords(PROGRAM_ID);
       const tokens = all.filter((r: any) => !r.spent && r.data?.amount) as Record[];
-      if (!tokens.length) { log('[ERR] deposit: no WALEO records'); setLoading(false); return; }
+      if (!tokens.length) {
+        log('[ERR] deposit: no WALEO records');
+        setLoading(false);
+        return;
+      }
       const token = tokens[0];
       const rcpt = recipient || publicKey;
-      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, DEPOSIT_FN, [escrowId, rcpt, token], FEE, false);
+      const tx = Transaction.createTransaction(
+        publicKey,
+        NETWORK,
+        PROGRAM_ID,
+        DEPOSIT_FN,
+        [escrowId, rcpt, token],
+        FEE,
+        false
+      );
       await submitAndPoll(tx, DEPOSIT_FN);
-    } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
+    } catch (e) {
+      log(`Error: ${e}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 4. Release
@@ -100,9 +149,21 @@ const DashboardDemo: NextPageWithLayout = () => {
     setLoading(true);
     try {
       const rcpt = recipient || publicKey;
-      const tx = Transaction.createTransaction(publicKey, NETWORK, PROGRAM_ID, RELEASE_FN, [escrowId, ReleaseAmount, rcpt], FEE, false);
+      const tx = Transaction.createTransaction(
+        publicKey,
+        NETWORK,
+        PROGRAM_ID,
+        RELEASE_FN,
+        [escrowId, releaseAmount, rcpt],
+        FEE,
+        false
+      );
       await submitAndPoll(tx, RELEASE_FN);
-    } catch (e) { log(`Error: ${e}`); } finally { setLoading(false); }
+    } catch (e) {
+      log(`Error: ${e}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -134,7 +195,18 @@ const DashboardDemo: NextPageWithLayout = () => {
         {/* Release */}
         <div className="border rounded p-4 space-y-4">
           <h2 className="text-xl font-medium">3. Release Escrow</h2>
-          <input className="border rounded px-3 py-2 w-full" placeholder="Escrow ID" value={escrowId} onChange={(e) => setEscrowId(e.target.value)} />
+          <input
+            className="border rounded px-3 py-2 w-full"
+            placeholder="Escrow ID"
+            value={escrowId}
+            onChange={(e) => setEscrowId(e.target.value)}
+          />
+          <input
+            className="border rounded px-3 py-2 w-full"
+            placeholder="Amount (e.g. 5000000u64)"
+            value={releaseAmount}
+            onChange={(e) => setReleaseAmount(e.target.value)}
+          />
           <Button onClick={release} disabled={!connected || loading}>Release</Button>
         </div>
 
