@@ -45,7 +45,7 @@ No manual copy‑pasting of ciphertext, no need to pre‑fund the contract – 
 * **Tailwind CSS** – utility‑first styling
 * **Aleo Wallet Adapter** – connect, sign, fetch private records
 * **TypeScript** – end‑to‑end strict types
-* **Leo** – `zkescrow_combinedv2.aleo` contract (see `contracts/`)
+* **Leo** – `zkescrow_v1.aleo` contract (see `contracts/`)
 
 ---
 
@@ -78,7 +78,7 @@ Then open `http://localhost:3000`, connect Leo Wallet Testnet Beta, and click 
 │   └── utils/
 │       └── ...            # helper hooks
 ├── contracts/
-│   └── zkescrow_combinedv2.aleo
+│   └── zkescrow_v1.aleo
 └── README.md
 ```
 

@@ -1,6 +1,6 @@
 import credits.aleo;
 
-program zkescrow_combinedv2.aleo {
+program zkescrow_v1.aleo {
     const HOLDER: address =
         aleo1xh0ncflwkfzga983lwujsha729c8nwu7phfn8aw7h3gahhj0ms8qytrxec;
 
@@ -97,39 +97,43 @@ program zkescrow_combinedv2.aleo {
 
     async transition claim(
         public id: u64,
-        public amount: u64
+        public amount: u64,
+        public recipient: address
     ) -> (WALEO, Future) {
-        let out: WALEO = WALEO { owner: self.caller, amount };
-        return (out, finalize_claim(id, amount, self.caller));
+        let out: WALEO = WALEO { owner: recipient, amount };
+        return (out, finalize_claim(id, amount, recipient));
     }
 
     async function finalize_claim(
         public id: u64,
         public amount: u64,
-        public caller: address
+        public recipient: address
     ) {
         let e: Escrow = escrows.get(id);
-        assert_eq(caller, e.recipient);
+        assert_eq(recipient, e.recipient);
         assert_eq(amount, e.amount);
         escrows.remove(id);
     }
 
+
     async transition cancel(
         public id: u64,
-        public amount: u64
+        public amount: u64,
+        public recipient: address
     ) -> (WALEO, Future) {
-        let out: WALEO = WALEO { owner: self.caller, amount };
-        return (out, finalize_cancel(id, amount, self.caller));
+        let out: WALEO = WALEO { owner: recipient, amount };
+        return (out, finalize_cancel(id, amount, recipient));
     }
 
     async function finalize_cancel(
         public id: u64,
         public amount: u64,
-        public caller: address
+        public recipient: address
     ) {
         let e: Escrow = escrows.get(id);
-        assert_eq(caller, e.sender);
+        assert_eq(recipient, e.sender);
         assert_eq(amount, e.amount);
         escrows.remove(id);
     }
+
 }

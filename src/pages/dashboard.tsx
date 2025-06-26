@@ -11,15 +11,15 @@ import {
 import { useState } from 'react';
 
 // ──────────────────────────────────────────
-const PROGRAM_ID = 'zkescrow_combinedv2.aleo';
-const NETWORK = WalletAdapterNetwork.TestnetBeta;
+const PROGRAM_ID = 'zkescrow_v1.aleo';
+const NETWORK = WalletAdapterNetwork.MainnetBeta;
 
 const WRAP_FN = 'wrap_public_credits';
 const UNWRAP_FN = 'unwrap_public_credits';
 const DEPOSIT_FN = 'deposit';
 const RELEASE_FN = 'release';
 
-const FEE = 1_000_000;
+const FEE = 100000;
 // ──────────────────────────────────────────
 
 const DashboardDemo: NextPageWithLayout = () => {
@@ -189,7 +189,7 @@ const DashboardDemo: NextPageWithLayout = () => {
     <>
       <NextSeo title="zkEscrow Demo" />
       <div className="p-6 space-y-8 max-w-2xl mx-auto">
-        <h1 className="text-3xl font-semibold">zkEscrow Demo</h1>
+        <h1 className="text-3xl font-semibold">zkEscrow</h1>
         {connected ? (
           <p className="text-sm text-gray-600 break-all">Connected as <span className="font-mono">{publicKey}</span></p>
         ) : (
