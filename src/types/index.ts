@@ -1,14 +1,9 @@
 import type { NextPage } from 'next';
 import type { ReactElement, ReactNode } from 'react';
-import { WalletAdapterNetwork } from '@demox-labs/aleo-wallet-adapter-base';
+import { NETWORK, RPC_URL } from '@/config/network';
 
-//Change to MainnetBeta for mainnet or TestnetBeta for testnet
-export const CURRENT_NETWORK: WalletAdapterNetwork = WalletAdapterNetwork.MainnetBeta;
-
-
-//TESTNET_RPC_URL=https://testnetbeta.aleorpc.com
-//MAINNET_RPC_URL=https://mainnet.aleorpc.com
-export const CURRENT_RPC_URL = "https://mainnet.aleorpc.com";
+export const CURRENT_NETWORK = NETWORK;
+export const CURRENT_RPC_URL = RPC_URL;
 
 export type NextPageWithLayout<P = {}> = NextPage<P> & {
   authorization?: boolean;
@@ -36,4 +31,4 @@ export type BountyData = {
   proposals?: ProposalData[];
 };
 
-export const PROGRAM_ID = 'zkescrow_v1.aleo';
+export const PROGRAM_ID = 'zk_escrow_v2.aleo';

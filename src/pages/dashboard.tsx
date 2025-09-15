@@ -11,7 +11,7 @@ import {
 import { useState } from 'react';
 
 // ──────────────────────────────────────────
-const PROGRAM_ID = 'zkescrow_v1.aleo';
+const PROGRAM_ID = 'zkescrow_v2.aleo';
 const NETWORK = WalletAdapterNetwork.MainnetBeta;
 
 const WRAP_FN = 'wrap_public_credits';
@@ -34,8 +34,8 @@ const DashboardDemo: NextPageWithLayout = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const log = (l: string) => setLogs((p) => [...p, l]);
 
-  const [amount, setAmount] = useState('100u64');
-  const [escrowId, setEscrowId] = useState('1u64');
+  const [amount, setAmount] = useState('1000000');
+  const [escrowId, setEscrowId] = useState('1');
   const [recipient, setRecipient] = useState('');
   const [unwrapRecipient, setUnwrapRecipient] = useState('');
   const [releaseAmount, setReleaseAmount] = useState('');
@@ -158,6 +158,10 @@ const DashboardDemo: NextPageWithLayout = () => {
       } else {
         // fetch the escrow record to get its amount
         const all = await requestRecords(PROGRAM_ID);
+
+        console.log('All records:', all);
+        console.log('escrowId:', escrowId);
+
         const tokens = all.filter((r: any) => !r.spent && r.data?.escrow_id === escrowId) as Record[];
         if (!tokens.length) {
           log('[ERR] release: no matching escrow record');

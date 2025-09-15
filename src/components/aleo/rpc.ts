@@ -1,5 +1,5 @@
 import { JSONRPCClient } from 'json-rpc-2.0';
-import { BOUNTY_PROGRAM_ID } from '@/types';
+import { PROGRAM_ID } from '@/types';
 import { CURRENT_RPC_URL } from '@/types';
 
 
@@ -16,8 +16,8 @@ export async function fetchMappingValueString(
 ): Promise<string> {
   try {
     const result = await client.request('getMappingValue', {
-      programId: BOUNTY_PROGRAM_ID,
-      mappingName,
+      program_id: PROGRAM_ID,
+      mapping_name: mappingName,
       key: `${key}.public`,
     });
     return result.value; // The address is stored as string in 'result.value'
@@ -36,7 +36,7 @@ export async function fetchMappingValueRaw(
     const keyString = `${key}u64`;
 
     const result = await client.request("getMappingValue", {
-      program_id: BOUNTY_PROGRAM_ID,
+      program_id: PROGRAM_ID,
       mapping_name: mappingName,
       key: keyString,
     });
@@ -62,13 +62,13 @@ export async function fetchBountyStatusAndReward(bountyId: string) {
 
 
     const statusResult = await client.request('getMappingValue', {
-      program_id: BOUNTY_PROGRAM_ID,
+      program_id: PROGRAM_ID,
       mapping_name: 'bounty_status',
       key: keyU64,
     });
 
     const rewardResult = await client.request('getMappingValue', {
-      program_id: BOUNTY_PROGRAM_ID,
+      program_id: PROGRAM_ID,
       mapping_name: 'bounty_reward',
       key: keyU64,
     });
@@ -130,10 +130,10 @@ export async function getProgramTransactions(
   maxTransactions = 100
 ) {
   return client.request('aleoTransactionsForProgram', {
-    programId: BOUNTY_PROGRAM_ID,
-    functionName,
+    program_id: PROGRAM_ID,
+    function_name: functionName,
     page,
-    maxTransactions,
+    max_transactions: maxTransactions,
   });
 }
 
@@ -150,8 +150,8 @@ export async function transferPublic(
   ];
 
   const result = await client.request('executeTransition', {
-    programId: CREDITS_PROGRAM_ID,
-    functionName: 'transfer_public',
+    program_id: CREDITS_PROGRAM_ID,
+    function_name: 'transfer_public',
     inputs,
   });
 
@@ -187,8 +187,8 @@ export async function transferPrivate(
   ];
 
   const result = await client.request('executeTransition', {
-    programId: CREDITS_PROGRAM_ID,
-    functionName: 'transfer_private',
+    program_id: CREDITS_PROGRAM_ID,
+    function_name: 'transfer_private',
     inputs,
   });
 
@@ -221,8 +221,8 @@ export async function postBounty(
     `${reward}.private`,
   ];
   const result = await client.request('executeTransition', {
-    programId: BOUNTY_PROGRAM_ID,
-    functionName: 'post_bounty',
+    program_id: PROGRAM_ID,
+    function_name: 'post_bounty',
     inputs,
   });
   if (!result.transactionId) {
@@ -239,8 +239,8 @@ export async function viewBountyById(
 ): Promise<{ payment: number; status: number }> {
   const inputs = [`${bountyId}.private`];
   const result = await client.request('executeTransition', {
-    programId: BOUNTY_PROGRAM_ID,
-    functionName: 'view_bounty_by_id',
+    program_id: PROGRAM_ID,
+    function_name: 'view_bounty_by_id',
     inputs,
   });
 
@@ -267,8 +267,8 @@ export async function submitProposal(
     `${proposer}.private`,
   ];
   const result = await client.request('executeTransition', {
-    programId: BOUNTY_PROGRAM_ID,
-    functionName: 'submit_proposal',
+    program_id: PROGRAM_ID,
+    function_name: 'submit_proposal',
     inputs,
   });
   return result.transactionId;
@@ -292,8 +292,8 @@ export async function acceptProposal(
     `${reward}.private`,
   ];
   const result = await client.request('executeTransition', {
-    programId: BOUNTY_PROGRAM_ID,
-    functionName: 'accept_proposal',
+    program_id: PROGRAM_ID,
+    function_name: 'accept_proposal',
     inputs,
   });
   return result.transactionId;
@@ -308,8 +308,8 @@ export async function deleteBounty(
 ): Promise<string> {
   const inputs = [`${caller}.private`, `${bountyId}.private`];
   const result = await client.request('executeTransition', {
-    programId: BOUNTY_PROGRAM_ID,
-    functionName: 'delete_bounty',
+    program_id: PROGRAM_ID,
+    function_name: 'delete_bounty',
     inputs,
   });
   return result.transactionId;
@@ -352,8 +352,8 @@ export async function transfer(
 ): Promise<string> {
   const inputs = [`${caller}.private`, `${receiver}.private`, `${amount}.private`];
   const result = await client.request('executeTransition', {
-    programId: BOUNTY_PROGRAM_ID,
-    functionName: 'transfer',
+    program_id: PROGRAM_ID,
+    function_name: 'transfer',
     inputs,
   });
   if (!result.transactionId) {
@@ -375,8 +375,8 @@ export async function fetchMappingValue(
     const keyString = typeof key === 'number' ? `${key}.public` : `${key}.public`;
 
     const result = await client.request('getMappingValue', {
-      programId: BOUNTY_PROGRAM_ID,
-      mappingName,
+      program_id: PROGRAM_ID,
+      mapping_name: mappingName,
       key: keyString, // Always pass as a string
     });
 
@@ -456,8 +456,8 @@ export async function denyProposal(
   ];
     
     const result = await client.request('executeTransition', {
-      programId: BOUNTY_PROGRAM_ID,
-      functionName: 'deny_proposal', 
+      program_id: PROGRAM_ID,
+      function_name: 'deny_proposal', 
       inputs, 
     });
 

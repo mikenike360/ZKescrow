@@ -1,138 +1,135 @@
 import credits.aleo;
 
-program zkescrow_v1.aleo {
-    const HOLDER: address =
-        aleo1xh0ncflwkfzga983lwujsha729c8nwu7phfn8aw7h3gahhj0ms8qytrxec;
+program zk_escrow_v2.aleo {
 
-    record WALEO {
-        owner: address,
-        amount: u64,
-    }
+    const contract_owner: address = aleo1xh0ncflwkfzga983lwujsha729c8nwu7phfn8aw7h3gahhj0ms8qytrxec;
 
+    // Escrow structure for managing deposits
     struct Escrow {
         sender: address,
         recipient: address,
         amount: u64,
     }
 
+    // Mapping to store escrow information by ID
     mapping escrows: u64 => Escrow;
 
-    async transition wrap_public_credits(
-        public to: address,
-        public amount: u64
-    ) -> (WALEO, Future) {
-        assert(amount > 0u64);
-        let token: WALEO = WALEO { owner: to, amount };
-
-        //let future: Future = credits.aleo/transfer_public(HOLDER, amount);
-
-        let future: Future = credits.aleo/transfer_public_as_signer(HOLDER, amount);
-
-        return (token, finalize_wrap_public_credits(future));
+    // Upgrade constructor - required for Leo programs (upgradable)
+    @admin(address = "aleo1xh0ncflwkfzga983lwujsha729c8nwu7phfn8aw7h3gahhj0ms8qytrxec")
+    async constructor() {
+        // The Leo compiler automatically generates the constructor logic
     }
 
-    async function finalize_wrap_public_credits(
-        public future: Future
-    ) {
-        future.await();
-    }
 
-    async transition unwrap_public_credits(
-        private token: WALEO,
-        public recipient: address
-    ) -> (u64, Future) {
-        assert_eq(token.owner, self.caller);
-        let amt: u64 = token.amount;
-        let future: Future = credits.aleo/transfer_public(recipient, amt);
-        return (amt, finalize_unwrap_public_credits(future));
-    }
-
-    async function finalize_unwrap_public_credits(
-        public future: Future
-    ) {
-        future.await();
-    }
-
-    async transition deposit(
-        public id: u64,
-        private recipient: address,
-        private token: WALEO
-    ) -> (u8, Future) {
-        assert_eq(token.owner, self.caller);
-        assert(token.amount > 0u64);
-        return (0u8, finalize_deposit(id, recipient, token.amount, self.caller));
-    }
-
-    async function finalize_deposit(
+    // Create escrow with credits
+    async transition create_escrow(
         public id: u64,
         public recipient: address,
-        public amount: u64,
-        public sender: address
+        public amount: u64
+    ) -> Future {
+        assert(amount > 0u64);
+
+        // Transfer credits from user to this escrow contract
+        let transfer_future: Future = credits.aleo/transfer_public_as_signer(self.address, amount);
+
+        return finalize_create_escrow(transfer_future, id, recipient, amount, self.caller);
+    }
+
+    // Finalize the creation of escrow
+    async function finalize_create_escrow(
+        transfer_future: Future,
+        id: u64,
+        recipient: address,
+        amount: u64,
+        sender: address
     ) {
+        transfer_future.await();
+        
         assert(!escrows.contains(id));
         escrows.set(id, Escrow { sender, recipient, amount });
     }
 
+    // Release credits from escrow (called by sender)
     async transition release(
         public id: u64,
         public amount: u64,
         public recipient: address
-    ) -> (WALEO, Future) {
-        let out: WALEO = WALEO { owner: recipient, amount };
-        return (out, finalize_release(id, amount, recipient, self.caller));
+    ) -> Future {
+        // Transfer credits from escrow contract to recipient
+        let transfer_future: Future = credits.aleo/transfer_public(recipient, amount);
+
+        return finalize_release(transfer_future, id, amount, recipient, self.caller);
     }
 
+    // Finalize the release of credits from escrow
     async function finalize_release(
-        public id: u64,
-        public amount: u64,
-        public recipient: address,
-        public caller: address
+        transfer_future: Future,
+        id: u64,
+        amount: u64,
+        recipient: address,
+        caller: address
     ) {
-        let e: Escrow = escrows.get(id);
-        assert_eq(caller, e.sender);
-        assert_eq(recipient, e.recipient);
-        assert_eq(amount, e.amount);
+        transfer_future.await();
+        
+        let escrow_data: Escrow = escrows.get(id);
+        assert_eq(caller, escrow_data.sender); // Only sender can release
+        assert_eq(amount, escrow_data.amount); // Amount must match
+        // Note: recipient can be different from escrow_data.recipient (sender can release to anyone)
         escrows.remove(id);
     }
 
+    // Claim credits from escrow (called by recipient)
     async transition claim(
         public id: u64,
         public amount: u64,
         public recipient: address
-    ) -> (WALEO, Future) {
-        let out: WALEO = WALEO { owner: recipient, amount };
-        return (out, finalize_claim(id, amount, recipient));
+    ) -> Future {
+        // Transfer credits from escrow contract to recipient
+        let transfer_future: Future = credits.aleo/transfer_public(recipient, amount);
+
+        return finalize_claim(transfer_future, id, amount, recipient);
     }
 
+    // Finalize the claim of credits from escrow
     async function finalize_claim(
-        public id: u64,
-        public amount: u64,
-        public recipient: address
+        transfer_future: Future,
+        id: u64,
+        amount: u64,
+        recipient: address
     ) {
-        let e: Escrow = escrows.get(id);
-        assert_eq(recipient, e.recipient);
-        assert_eq(amount, e.amount);
+        transfer_future.await();
+        
+        let escrow_data: Escrow = escrows.get(id);
+        assert_eq(recipient, escrow_data.recipient);
+        assert_eq(amount, escrow_data.amount);
         escrows.remove(id);
     }
 
 
+    // Cancel escrow and return credits to sender
     async transition cancel(
         public id: u64,
         public amount: u64,
         public recipient: address
-    ) -> (WALEO, Future) {
-        let out: WALEO = WALEO { owner: recipient, amount };
-        return (out, finalize_cancel(id, amount, recipient));
+    ) -> Future {
+        // Transfer credits from escrow contract back to sender
+        let transfer_future: Future = credits.aleo/transfer_public(recipient, amount);
+
+        return finalize_cancel(transfer_future, id, amount, recipient);
     }
 
+    // Finalize the cancellation of escrow
     async function finalize_cancel(
-        public id: u64,
-        public amount: u64,
-        public recipient: address
+        transfer_future: Future,
+        id: u64,
+        amount: u64,
+        recipient: address
     ) {
-        let e: Escrow = escrows.get(id);
-        assert_eq(recipient, e.sender);
-        assert_eq(amount, e.amount);
+        transfer_future.await();
+        
+        let escrow_data: Escrow = escrows.get(id);
+        assert_eq(recipient, escrow_data.sender);
+        assert_eq(amount, escrow_data.amount);
         escrows.remove(id);
     }
 
