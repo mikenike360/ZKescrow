@@ -1,7 +1,8 @@
 import credits.aleo;
 
-program zk_escrow_v2.aleo {
+program zk_escrow_v3.aleo {
 
+    
     const contract_owner: address = aleo1xh0ncflwkfzga983lwujsha729c8nwu7phfn8aw7h3gahhj0ms8qytrxec;
 
     // Escrow structure for managing deposits
@@ -11,17 +12,16 @@ program zk_escrow_v2.aleo {
         amount: u64,
     }
 
-    // Mapping to store escrow information by ID
+    // Mapping to store escrows
     mapping escrows: u64 => Escrow;
 
-    // Upgrade constructor - required for Leo programs (upgradable)
-    @admin(address = "aleo1xh0ncflwkfzga983lwujsha729c8nwu7phfn8aw7h3gahhj0ms8qytrxec")
+    @noupgrade
     async constructor() {
-        // The Leo compiler automatically generates the constructor logic
+        // The Leo compiler automatically generates the constructor logic.
     }
 
 
-    // Create escrow with credits
+    // Create a new escrow
     async transition create_escrow(
         public id: u64,
         public recipient: address,
@@ -100,13 +100,12 @@ program zk_escrow_v2.aleo {
         transfer_future.await();
         
         let escrow_data: Escrow = escrows.get(id);
-        assert_eq(recipient, escrow_data.recipient);
-        assert_eq(amount, escrow_data.amount);
+        assert_eq(recipient, escrow_data.recipient); // Only recipient can claim
+        assert_eq(amount, escrow_data.amount); // Amount must match
         escrows.remove(id);
     }
 
-
-    // Cancel escrow and return credits to sender
+    // Cancel escrow and return funds to sender
     async transition cancel(
         public id: u64,
         public amount: u64,
@@ -127,8 +126,13 @@ program zk_escrow_v2.aleo {
     ) {
         transfer_future.await();
         
+        // Check if escrow exists before trying to access it
+        assert(escrows.contains(id));
         let escrow_data: Escrow = escrows.get(id);
-        assert_eq(recipient, escrow_data.sender);
+        
+        // Allow cancellation by either the sender (main contract) or the recipient (bounty creator)
+        // This allows the bounty creator to cancel even though the main contract is the sender
+        assert(recipient == escrow_data.sender || recipient == escrow_data.recipient);
         assert_eq(amount, escrow_data.amount);
         escrows.remove(id);
     }
