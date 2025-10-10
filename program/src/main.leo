@@ -1,6 +1,6 @@
 import credits.aleo;
 
-program zk_escrow_v3.aleo {
+program zk_escrow_v2.aleo {
 
     
     const contract_owner: address = aleo1xh0ncflwkfzga983lwujsha729c8nwu7phfn8aw7h3gahhj0ms8qytrxec;

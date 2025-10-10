@@ -7,6 +7,8 @@ import { Twitter } from '@/components/icons/twitter';
 import { Discord } from '@/components/icons/discord';
 import { useTheme } from 'next-themes';
 import Footer from '@/components/ui/Footer';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 require('@demox-labs/aleo-wallet-adapter-reactui/dist/styles.css');
 
@@ -69,6 +71,14 @@ function HeaderRightArea() {
 export function Header() {
   const windowScroll = useWindowScroll();
   const isMounted = useIsMounted();
+  const router = useRouter();
+
+  const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/board', label: 'Board' },
+    { href: '/examples', label: 'Examples' },
+  ];
 
   return (
     <nav
@@ -76,11 +86,12 @@ export function Header() {
         isMounted && windowScroll.y > 10 ? 'shadow-card backdrop-blur' : ''
       }`}
     >
-      <div className="flex flex-wrap items-center justify-between px-8 py-8 sm:px-6 lg:px-8 xl:px-10 3xl:px-12">
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between px-6 py-5 gap-4">
+        {/* Left: Social Icons */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           {process.env.URL && (
             <a
-              className="bg-base-300 bg-opacity-20 rounded-full p-2"
+              className="bg-base-300 bg-opacity-20 rounded-full p-2 hover:bg-opacity-40 transition-all"
               href={`${process.env.URL}`}
             >
               <HomeIcon />
@@ -88,7 +99,7 @@ export function Header() {
           )}
           {process.env.TWITTER && (
             <a
-              className="bg-base-300 bg-opacity-20 rounded-full p-2"
+              className="bg-base-300 bg-opacity-20 rounded-full p-2 hover:bg-opacity-40 transition-all"
               href={`${process.env.TWITTER}`}
             >
               <Twitter width="18" height="18" />
@@ -96,24 +107,59 @@ export function Header() {
           )}
           {process.env.DISCORD && (
             <a
-              className="bg-base-300 bg-opacity-20 rounded-full p-2"
+              className="bg-base-300 bg-opacity-20 rounded-full p-2 hover:bg-opacity-40 transition-all"
               href={`${process.env.DISCORD}`}
             >
               <Discord width="18" height="18" />
             </a>
           )}
         </div>
-        {/* Added a wrapper div with margin-left to create more space */}
-        <div className="ml-2 mt-2">
+
+        {/* Center: Navigation Links */}
+        <div className="hidden md:flex items-center justify-center flex-1 max-w-2xl mx-auto">
+          <div className="flex items-center gap-6 bg-base-300 bg-opacity-30 rounded-full px-6 py-2">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-6 py-2 rounded-full font-semibold text-sm transition-all duration-200 whitespace-nowrap ${
+                  router.pathname === link.href
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
+                    : 'text-base-content hover:bg-base-100 hover:shadow-sm'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: Theme Selector & Wallet */}
+        <div className="flex items-center gap-3 flex-shrink-0">
           <HeaderRightArea />
         </div>
       </div>
-      
+
+      {/* Mobile Navigation */}
+      <div className="md:hidden px-4 pb-4 flex justify-center">
+        <div className="flex items-center gap-3 bg-base-300 bg-opacity-30 rounded-full px-4 py-2">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 whitespace-nowrap ${
+                router.pathname === link.href
+                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
+                  : 'text-base-content hover:bg-base-100 hover:shadow-sm'
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </div>
     </nav>
   );
-  
-  
-  
 }
 
 interface LayoutProps {}
