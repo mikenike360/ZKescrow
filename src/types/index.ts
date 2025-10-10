@@ -12,25 +12,4 @@ export type NextPageWithLayout<P = {}> = NextPage<P> & {
   getLayout?: (page: ReactElement) => ReactNode;
 };
 
-// src/types/index.ts
-export type ProposalData = {
-  bountyId: number;
-  proposalId: number;
-  proposerAddress: string;
-  proposalText?: string;
-  fileName?: string;
-  fileUrl?: string;
-  status?: string;
-  rewardSent?: boolean;
-};
-
-export type BountyData = {
-  id: number;
-  title: string;
-  reward: string;
-  deadline: string;
-  creatorAddress: string;
-  proposals?: ProposalData[];
-};
-
 export const PROGRAM_ID = 'zk_escrow_v2.aleo';
