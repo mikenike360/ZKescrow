@@ -302,14 +302,14 @@ program zkontract_v2.aleo {
               <div className="space-y-3">
                 <div>
                   <strong className="text-gray-800">ZKontract Repository:</strong>{' '}
-                  <a href="https://github.com/VenomLabsXyz/ZKontract" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                    github.com/VenomLabsXyz/ZKontract
+                  <a href="https://github.com/mikenike360/ZKontract" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                    github.com/mikenike360/ZKontract
                   </a>
                 </div>
                 <div>
                   <strong className="text-gray-800">ZK Escrow v2 Repository:</strong>{' '}
-                  <a href="https://github.com/VenomLabsXyz/ZKescrow" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                    github.com/VenomLabsXyz/ZKescrow
+                  <a href="https://github.com/mikenike360/ZKescrow" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                    github.com/mikenike360/ZKescrow
                   </a>
                 </div>
                 <div>

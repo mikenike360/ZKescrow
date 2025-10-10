@@ -111,7 +111,7 @@ Used in production by **ZKontract** (zkontract_v2.aleo) for managing bounty paym
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/VenomLabsXyz/ZKescrow
+git clone https://github.com/mikenike360/ZKescrow
 cd ZKescrow/zkescrow
 
 # 2. Install dependencies
@@ -392,7 +392,7 @@ We welcome contributions! Here's how you can help:
 ## Links & Resources
 
 - **Live App:** [zkescrow.vercel.app](https://zkescrow.vercel.app)
-- **GitHub:** [github.com/VenomLabsXyz/ZKescrow](https://github.com/VenomLabsXyz/ZKescrow)
+- **GitHub:** [github.com/mikenike360/ZKescrow](https://github.com/mikenike360/ZKescrow)
 - **VenomLabs:** [venomlabs.xyz](https://venomlabs.xyz)
 - **Aleo:** [aleo.org](https://aleo.org)
 - **Leo Docs:** [developer.aleo.org](https://developer.aleo.org)
